@@ -1,37 +1,49 @@
 from dotenv import load_dotenv
-
 load_dotenv()
 
-import smtplib
 import os
-from email.message import EmailMessage
+import requests
+import base64
 
 
 def send_simple_mail(to_email: str, pdf_path: str):
-    msg = EmailMessage()
-    msg["From"] = os.getenv("EMAIL_ADDRESS")
-    msg["To"] = to_email
-    msg["Subject"] = "Votre PDF"
 
-    msg.set_content("Bonjour,\n\nVeuillez trouver votre PDF en pièce jointe.\n")
+    api_key = os.getenv("BREVO_API_KEY")
 
+    if not api_key:
+        raise Exception("BREVO_API_KEY not found")
+
+    # Lire et encoder le PDF
     with open(pdf_path, "rb") as f:
-        file_data = f.read()
-        msg.add_attachment(
-            file_data,
-            maintype="application",
-            subtype="pdf",
-            filename="document.pdf"
-        )
+        encoded_file = base64.b64encode(f.read()).decode()
 
-    with smtplib.SMTP(
-        os.getenv("SMTP_SERVER"),
-        int(os.getenv("SMTP_PORT"))
-    ) as server:
-        server.starttls()
-        server.login(
-            os.getenv("EMAIL_ADDRESS"),
-            os.getenv("EMAIL_PASSWORD")
-        )
-        server.send_message(msg)
-    
+    url = "https://api.brevo.com/v3/smtp/email"
+
+    headers = {
+        "accept": "application/json",
+        "api-key": api_key,
+        "content-type": "application/json"
+    }
+
+    data = {
+        "sender": {
+            "name": "Images to PDF",
+            "email": "edtohoun@gmail.com"   # doit être validé dans Brevo
+        },
+        "to": [
+            {"email": to_email}
+        ],
+        "subject": "Votre PDF est prêt",
+        "htmlContent": "<p>Bonjour,<br><br>Votre fichier PDF est en pièce jointe.</p>",
+        "attachment": [
+            {
+                "content": encoded_file,
+                "name": "document.pdf"
+            }
+        ]
+    }
+
+    response = requests.post(url, headers=headers, json=data)
+
+    if response.status_code != 201:
+        raise Exception(f"Brevo error: {response.text}")
