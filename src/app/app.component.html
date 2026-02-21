@@ -1,0 +1,86 @@
+<div class="container">
+
+    <h1>Convertir des images en PDF</h1>
+  
+    <!-- Zone Upload -->
+    <div class="upload-box"
+    (drop)="onFileDrop($event)"
+    (dragover)="onFileDragOver($event)">
+
+    <label>
+
+     <input type="file"
+          multiple
+          accept="image/*"
+          (change)="onFileSelected($event)"
+          hidden>
+
+     <div class="upload-content">
+       <strong>Sélectionner des images</strong>
+       <p>ou glisser-déposer ici</p>
+     </div>
+
+    </label>
+
+  </div>
+
+          
+  
+  
+    
+      <div
+      class="preview"
+      cdkDropList
+      cdkDropListOrientation="horizontal"
+      (cdkDropListDropped)="drop($event)"
+    >
+    
+      <div
+        class="preview-item"
+        *ngFor="let img of previews; let i = index; trackBy: trackByIndex"
+        cdkDrag
+      >
+        <img [src]="img" />
+        <button class="remove-btn" (click)="removeImage(i)">×</button>
+      </div>
+    
+    </div>
+    
+      <!-- Email input -->
+    <div class="email-box">
+      <input 
+        type="email"
+        [(ngModel)]="email"
+        placeholder="Entrez votre email"
+        required
+    />
+    </div>
+
+  
+    <!-- Action Button -->
+    <button 
+    class="generate-btn"
+    (click)="generatePDF()" 
+    [disabled]="isLoading || selectedFiles.length === 0">
+
+  <span *ngIf="!isLoading">Générer le PDF</span>
+  <span *ngIf="isLoading"> Génération en cours...</span>
+
+</button>
+<p *ngIf="errorMessage" style="color:red;">
+  {{ errorMessage }}
+</p>
+
+<p *ngIf="!isLoading && selectedFiles.length === 0" style="color:green;">
+  PDF généré avec succès ✔
+</p>
+
+
+   <p class="error" *ngIf="errorMessage">
+      {{ errorMessage }}
+   </p>
+
+
+  
+  </div>
+  
